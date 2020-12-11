@@ -41,3 +41,11 @@ jobs:
         cmake -GNinja -S wakaama/examples -B build-wakaama-examples
         cmake --build build-wakaama-examples
       working-directory: ${{ github.workspace }}
+
+    - name: Setup python
+      uses: actions/setup-python@v2
+
+    - name: Run integration tests on exmaples
+      run: |
+          pip install pytest pexpect
+          pytest
