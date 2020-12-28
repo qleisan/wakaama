@@ -87,7 +87,7 @@
 int g_reboot = 0;
 static int g_quit = 0;
 
-#define OBJ_COUNT 9
+#define OBJ_COUNT 10
 lwm2m_object_t * objArray[OBJ_COUNT];
 
 // only backup security and server objects
@@ -675,6 +675,9 @@ static void prv_display_objects(char * buffer,
             case TEST_OBJECT_ID:
                 display_test_object(object);
                 break;
+            case TEMP_OBJECT_ID:
+                display_temp_object(object);
+                break;
             }
         }
     }
@@ -1123,6 +1126,13 @@ int main(int argc, char *argv[])
         fprintf(stderr, "Failed to create Access Control ACL resource for serverId: 999\r\n");
         return -1;
     }
+
+    objArray[9] = get_temp_object();
+    if (NULL == objArray[9])
+    {
+        fprintf(stderr, "Failed to create temperature object\r\n");
+        return -1;
+    }
     /*
      * The liblwm2m library is now initialized with the functions that will be in
      * charge of communication
@@ -1406,6 +1416,7 @@ int main(int argc, char *argv[])
     free_object_conn_m(objArray[6]);
     free_object_conn_s(objArray[7]);
     acl_ctrl_free_object(objArray[8]);
+    free_temp_object(objArray[9]);
 
 #ifdef MEMORY_TRACE
     if (g_quit == 1)
