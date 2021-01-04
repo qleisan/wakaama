@@ -22,8 +22,17 @@
 #include "connection.h"
 #include "commandline.h"
 
+#ifdef ARDUINO
+#include <Arduino.h>
+#include <WiFiNINA.h>
+#include <WiFiUdp.h>
+#endif
+
 int create_socket(const char * portStr, int addressFamily)
 {
+    #ifndef ARDUINO
+    fprintf(stdout, "QLEISAN: create_socket\r\n");
+
     int s = -1;
     struct addrinfo hints;
     struct addrinfo *res;
@@ -55,12 +64,14 @@ int create_socket(const char * portStr, int addressFamily)
     freeaddrinfo(res);
 
     return s;
+    #endif
 }
 
 connection_t * connection_find(connection_t * connList,
                                struct sockaddr_storage * addr,
                                size_t addrLen)
 {
+    fprintf(stdout, "QLEISAN: connection_find\r\n");
     connection_t * connP;
 
     connP = connList;
@@ -82,6 +93,7 @@ connection_t * connection_new_incoming(connection_t * connList,
                                        struct sockaddr * addr,
                                        size_t addrLen)
 {
+    fprintf(stdout, "QLEISAN: connection_new_incoming\r\n");
     connection_t * connP;
 
     connP = (connection_t *)lwm2m_malloc(sizeof(connection_t));
@@ -102,6 +114,8 @@ connection_t * connection_create(connection_t * connList,
                                  char * port,
                                  int addressFamily)
 {
+    #ifndef ARDUINO
+    fprintf(stdout, "QLEISAN: connection_create\r\n");
     struct addrinfo hints;
     struct addrinfo *servinfo = NULL;
     struct addrinfo *p;
@@ -142,10 +156,16 @@ connection_t * connection_create(connection_t * connList,
     }
 
     return connP;
+    #else
+    //QLEISAN - WARNING UGLY TEMP HACK
+    return (connection_t *)lwm2m_malloc(sizeof(connection_t));
+    #endif
+
 }
 
 void connection_free(connection_t * connList)
 {
+    fprintf(stdout, "QLEISAN: connection_free\r\n");
     while (connList != NULL)
     {
         connection_t * nextP;
@@ -161,6 +181,7 @@ int connection_send(connection_t *connP,
                     uint8_t * buffer,
                     size_t length)
 {
+    fprintf(stdout, "QLEISAN: connection_send\r\n");
     int nbSent;
     size_t offset;
 
@@ -189,12 +210,36 @@ int connection_send(connection_t *connP,
 #endif
 
     offset = 0;
+    #ifdef ARDUINO
+    Serial.println("SUCCESS!! INSIDE connection_send()");
+    Serial.println(length);
+    for(int i=0;i<length;i++)
+    {
+        Serial.print(i);
+        Serial.print(":");
+        Serial.print(buffer[i],HEX);
+        Serial.print(":");
+        Serial.write(buffer[i]);
+        Serial.println("");
+    }
+    Serial.println("Send packet using WiFiNINA");
+
+    extern WiFiUDP Udp;
+
+    //qleisan - remove hardcoding, IP should be read from data structure
+    IPAddress address(192, 168, 0, 23);
+    Udp.beginPacket(address, 5683);
+    Udp.write(buffer, length);
+    Udp.endPacket();
+    Serial.println("Packet Sent!");
+    #else
     while (offset != length)
     {
         nbSent = sendto(connP->sock, buffer + offset, length - offset, 0, (struct sockaddr *)&(connP->addr), connP->addrLen);
         if (nbSent == -1) return -1;
         offset += nbSent;
     }
+    #endif
     return 0;
 }
 
@@ -203,6 +248,7 @@ uint8_t lwm2m_buffer_send(void * sessionH,
                           size_t length,
                           void * userdata)
 {
+    fprintf(stdout, "QLEISAN: lwm2m_buffer_send\r\n");
     connection_t * connP = (connection_t*) sessionH;
 
     (void)userdata; /* unused */
@@ -226,6 +272,8 @@ bool lwm2m_session_is_equal(void * session1,
                             void * session2,
                             void * userData)
 {
+    fprintf(stdout, "QLEISAN: lwm2m_session_is_equal\r\n");
+
     (void)userData; /* unused */
 
     return (session1 == session2);

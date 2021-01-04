@@ -21,6 +21,10 @@
 #include <stdarg.h>
 #include <time.h>
 
+#ifdef ARDUINO
+#include <Arduino.h>
+#endif
+
 #ifndef LWM2M_MEMORY_TRACE
 
 void * lwm2m_malloc(size_t s)
@@ -49,7 +53,14 @@ int lwm2m_strncmp(const char * s1,
 
 time_t lwm2m_gettime(void)
 {
+    #ifndef ARDUINO
     return time(NULL);
+    #else
+    long int mytime=0;
+    mytime=millis()/1000;
+    Serial.print("QLEISAN - time: ");    
+    Serial.println(mytime);    
+    #endif
 }
 
 void lwm2m_printf(const char * format, ...)

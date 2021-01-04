@@ -20,11 +20,13 @@
 
 #include <stdio.h>
 #include <unistd.h>
+#ifndef ARDUINO
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <netdb.h>
 #include <sys/socket.h>
 #include <sys/stat.h>
+#endif
 #include <liblwm2m.h>
 
 #define LWM2M_STANDARD_PORT_STR "5683"
@@ -38,7 +40,11 @@ typedef struct _connection_t
 {
     struct _connection_t *  next;
     int                     sock;
+#ifndef ARDUINO
     struct sockaddr_in6     addr;
+#else
+    int                     addr;
+#endif
     size_t                  addrLen;
 } connection_t;
 

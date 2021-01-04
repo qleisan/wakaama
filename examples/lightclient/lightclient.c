@@ -54,10 +54,14 @@
  Bosch Software Innovations GmbH - Please refer to git log
 
 */
+#ifdef ARDUINO
+#include <Arduino.h>
+#endif
 
 #include "liblwm2m.h"
 #include "connection.h"
 
+#ifndef ARDUINO
 #include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -72,6 +76,7 @@
 #include <sys/stat.h>
 #include <errno.h>
 #include <signal.h>
+#endif
 
 extern lwm2m_object_t * get_object_device(void);
 extern void free_object_device(lwm2m_object_t * objectP);
@@ -85,6 +90,14 @@ extern void free_test_object(lwm2m_object_t * object);
 
 #define MAX_PACKET_SIZE 1024
 
+#ifdef ARDUINO
+#define fprintf myfprintf
+void myfprintf(FILE *apa, const char * bepa)
+{
+    Serial.print(bepa);
+}
+#endif
+
 int g_reboot = 0;
 static int g_quit = 0;
 
@@ -97,10 +110,10 @@ typedef struct
 } client_data_t;
 
 
-void handle_sigint(int signum)
-{
-    g_quit = 1;
-}
+// void handle_sigint(int signum)
+// {
+//     g_quit = 1;
+// }
 
 void * lwm2m_connect_server(uint16_t secObjInstID,
                             void * userData)
@@ -117,7 +130,8 @@ void * lwm2m_connect_server(uint16_t secObjInstID,
 
     if (uri == NULL) return NULL;
 
-    fprintf(stdout, "Connecting to %s\r\n", uri);
+    //fprintf(stdout, "Connecting to %s\r\n", uri);
+    fprintf(stdout, "Connecting to SOMETHING\r\n");
 
     // parse uri in the form "coaps://[host]:[port]"
     if (0 == strncmp(uri, "coaps://", strlen("coaps://")))
@@ -245,8 +259,10 @@ void print_state(lwm2m_context_t * lwm2mH)
         fprintf(stderr, "Bootstrap Servers:\r\n");
         for (targetP = lwm2mH->bootstrapServerList ; targetP != NULL ; targetP = targetP->next)
         {
+            /*
             fprintf(stderr, " - Security Object ID %d", targetP->secObjInstID);
             fprintf(stderr, "\tHold Off Time: %lu s", (unsigned long)targetP->lifetime);
+            */
             fprintf(stderr, "\tstatus: ");
             switch(targetP->status)
             {
@@ -269,7 +285,8 @@ void print_state(lwm2m_context_t * lwm2mH)
                 fprintf(stderr, "BOOTSTRAP FAILED\r\n");
                 break;
             default:
-                fprintf(stderr, "INVALID (%d)\r\n", (int)targetP->status);
+                //fprintf(stderr, "INVALID (%d)\r\n", (int)targetP->status);
+                fprintf(stderr, "INVALID XXX\r\n");
             }
             fprintf(stderr, "\r\n");
         }
@@ -284,7 +301,7 @@ void print_state(lwm2m_context_t * lwm2mH)
         fprintf(stderr, "LWM2M Servers:\r\n");
         for (targetP = lwm2mH->serverList ; targetP != NULL ; targetP = targetP->next)
         {
-            fprintf(stderr, " - Server ID %d", targetP->shortID);
+            // fprintf(stderr, " - Server ID %d", targetP->shortID);
             fprintf(stderr, "\tstatus: ");
             switch(targetP->status)
             {
@@ -295,7 +312,8 @@ void print_state(lwm2m_context_t * lwm2mH)
                 fprintf(stderr, "REGISTRATION PENDING\r\n");
                 break;
             case STATE_REGISTERED:
-                fprintf(stderr, "REGISTERED\tlocation: \"%s\"\tLifetime: %lus\r\n", targetP->location, (unsigned long)targetP->lifetime);
+                //fprintf(stderr, "REGISTERED\tlocation: \"%s\"\tLifetime: %lus\r\n", targetP->location, (unsigned long)targetP->lifetime);
+                fprintf(stderr, "REGISTERED .... \r\n");
                 break;
             case STATE_REG_UPDATE_PENDING:
                 fprintf(stderr, "REGISTRATION UPDATE PENDING\r\n");
@@ -310,7 +328,8 @@ void print_state(lwm2m_context_t * lwm2mH)
                 fprintf(stderr, "REGISTRATION FAILED\r\n");
                 break;
             default:
-                fprintf(stderr, "INVALID (%d)\r\n", (int)targetP->status);
+                //fprintf(stderr, "INVALID (%d)\r\n", (int)targetP->status);
+                fprintf(stderr, "INVALID .....\r\n");
             }
             fprintf(stderr, "\r\n");
         }
@@ -319,7 +338,12 @@ void print_state(lwm2m_context_t * lwm2mH)
 
 #define OBJ_COUNT 4
 
+#ifdef ARDUINO
+int main2(int argc, char *argv[])
+#else
 int main(int argc, char *argv[])
+#endif
+
 {
     client_data_t data;
     lwm2m_context_t * lwm2mH = NULL;
@@ -333,7 +357,9 @@ int main(int argc, char *argv[])
 
     memset(&data, 0, sizeof(client_data_t));
 
+    #ifndef ARDUINO
     data.addressFamily = AF_INET6;
+    #endif
 
     opt = 1;
     while (opt < argc)
@@ -366,7 +392,9 @@ int main(int argc, char *argv[])
             localPort = argv[opt];
             break;
         case '4':
+            #ifndef ARDUINO
             data.addressFamily = AF_INET;
+            #endif
             break;
         default:
             print_usage();
@@ -378,6 +406,7 @@ int main(int argc, char *argv[])
     /*
      *This call an internal function that create an IPv6 socket on the port 5683.
      */
+    #ifndef ARDUINO
     fprintf(stderr, "Trying to bind LWM2M Client to port %s\r\n", localPort);
     data.sock = create_socket(localPort, data.addressFamily);
     if (data.sock < 0)
@@ -385,6 +414,7 @@ int main(int argc, char *argv[])
         fprintf(stderr, "Failed to open socket: %d %s\r\n", errno, strerror(errno));
         return -1;
     }
+    #endif
 
     /*
      * Now the main function fill an array with each object, this list will be later passed to liblwm2m.
@@ -437,16 +467,17 @@ int main(int argc, char *argv[])
     result = lwm2m_configure(lwm2mH, name, NULL, NULL, OBJ_COUNT, objArray);
     if (result != 0)
     {
-        fprintf(stderr, "lwm2m_configure() failed: 0x%X\r\n", result);
+        //fprintf(stderr, "lwm2m_configure() failed: 0x%X\r\n", result); //not supporting proper printf now
+        fprintf(stderr, "lwm2m_configure() failed\r\n");
         return -1;
     }
 
-    /*
-     * We catch Ctrl-C signal for a clean exit
-     */
-    signal(SIGINT, handle_sigint);
+//     /*
+//      * We catch Ctrl-C signal for a clean exit
+//      */
+//     signal(SIGINT, handle_sigint);
 
-    fprintf(stdout, "LWM2M Client \"%s\" started on port %s.\r\nUse Ctrl-C to exit.\r\n\n", name, localPort);
+    // fprintf(stdout, "LWM2M Client \"%s\" started on port %s.\r\nUse Ctrl-C to exit.\r\n\n", name, localPort);
 
     /*
      * We now enter in a while loop that will handle the communications from the server
@@ -473,10 +504,11 @@ int main(int argc, char *argv[])
         result = lwm2m_step(lwm2mH, &(tv.tv_sec));
         if (result != 0)
         {
-            fprintf(stderr, "lwm2m_step() failed: 0x%X\r\n", result);
+            //fprintf(stderr, "lwm2m_step() failed: 0x%X\r\n", result);
+            fprintf(stderr, "lwm2m_step() failed\r\n");
             return -1;
         }
-
+        #ifndef ARDUINO
         /*
          * This part wait for an event on the socket until "tv" timed out (set
          * with the precedent function)
@@ -536,14 +568,19 @@ int main(int argc, char *argv[])
                 }
             }
         }
+        #else
+            fprintf(stderr, "quitting main loop\r\n");
+            g_quit = 1;
+        #endif
+
     }
 
     /*
      * Finally when the loop is left, we unregister our client from it
      */
     lwm2m_close(lwm2mH);
-    close(data.sock);
-    connection_free(data.connList);
+    //close(data.sock);     //qleisan FIXME
+    //connection_free(data.connList);  //causes crash QLEISAN FIXME
 
     free_security_object(objArray[0]);
     free_server_object(objArray[1]);
