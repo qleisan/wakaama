@@ -53,6 +53,13 @@
 
 */
 
+//QLEISAN -- FIXME, needed for know since arduino build doesn't set this. Should be fine for linux (given ver >= 1.1)
+#ifndef LWM2M_SUPPORT_SENML_JSON
+#define LWM2M_SUPPORT_SENML_JSON
+#endif
+//#define LWM2M_CLIENT_MODE
+
+
 #ifndef _LWM2M_CLIENT_H_
 #define _LWM2M_CLIENT_H_
 

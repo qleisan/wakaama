@@ -56,6 +56,15 @@
 
 #include <stdio.h>
 
+//qleisan this is already defined elsewhere - improve
+#ifdef ARDUINO
+#include <Arduino.h>
+#define fprintf myfprintf2
+void myfprintf2(FILE *apa, const char * bepa)
+{
+    Serial.print(bepa);
+}
+#endif
 
 lwm2m_context_t * lwm2m_init(void * userData)
 {
