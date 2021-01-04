@@ -26,6 +26,8 @@ SET(SOURCES
     ${CMAKE_CURRENT_LIST_DIR}/object_test.c
     )
 
+add_definitions(-DLWM2M_SUPPORT_SENML_JSON)
+
 add_executable(${PROJECT_NAME} ${SOURCES} ${WAKAAMA_SOURCES} ${SHARED_SOURCES})
 
 # Add WITH_LOGS to debug variant

@@ -9,6 +9,14 @@
 *.user
 .dirstamp
 
+#qleisan
+*.d
+*.bin
+*.elf
+*.map
+*.hex
+.vscode
+
 # Eclipse
 .cproject
 .project
@@ -18,7 +26,7 @@
 build-*
 
 # In source build
-Makefile
+#Makefile
 CMakeCache.txt
 CMakeFiles
 Debug
