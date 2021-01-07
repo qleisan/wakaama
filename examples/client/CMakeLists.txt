@@ -1,6 +1,6 @@
 cmake_minimum_required (VERSION 3.0)
 
-project (lwm2mclient C)
+project (lwm2mclient C CXX)
 
 option(DTLS "Enable DTLS" OFF)
 
@@ -32,6 +32,7 @@ SET(SOURCES
     ${CMAKE_CURRENT_LIST_DIR}/object_access_control.c
     ${CMAKE_CURRENT_LIST_DIR}/test_object.c
     ${CMAKE_CURRENT_LIST_DIR}/object_temperature.c
+    ${CMAKE_CURRENT_LIST_DIR}/myCplusplus.cpp
     )
 
 add_executable(${PROJECT_NAME} ${SOURCES} ${WAKAAMA_SOURCES} ${SHARED_SOURCES})

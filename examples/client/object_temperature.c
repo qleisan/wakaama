@@ -60,6 +60,8 @@
 #include <string.h>
 #include <ctype.h>
 
+int mycppfun(void); // let the compiler know about the (c++) function
+
 /*
  * Multiple instance objects can use userdata to store data that will be shared between the different instances.
  * The lwm2m_object_t object structure - which represent every object of the liblwm2m as seen in the single instance
@@ -109,6 +111,7 @@ static uint8_t prv_read(uint16_t instanceId,
             // TODO: replace with code that read actual temperature!
             lwm2m_data_encode_float(targetP->temp, *dataArrayP + i);
             targetP->temp = targetP->temp + 1.0; // dummy incrementation of temp value - remove...
+            fprintf(stdout, "mycppfun() returned %d\r\n", mycppfun()); //demonstrate call to c++ function
             break;
         default:
             return COAP_404_NOT_FOUND;
