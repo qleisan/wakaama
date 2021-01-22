@@ -134,7 +134,7 @@ createlib:
 	ln -s $(tdir)/lwm2m_wakaama.cpp $(sdir)/lwm2m_wakaama.cpp
 	ln -s $(tdir)/lwm2m_wakaama.h $(sdir)/lwm2m_wakaama.h
 
-	ln -s $(tdir)/examples/lightclient/lightclient.c $(sdir)/lightclient.$(suffix)
+	#ln -s $(tdir)/examples/lightclient/lightclient.c $(sdir)/lightclient.$(suffix)
 	ln -s $(tdir)/examples/lightclient/object_device.c $(sdir)/object_device.$(suffix)
 	ln -s $(tdir)/examples/lightclient/object_security.c $(sdir)/object_security.$(suffix)
 	ln -s $(tdir)/examples/lightclient/object_server.c $(sdir)/object_server.$(suffix)
