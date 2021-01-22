@@ -140,10 +140,10 @@ createlib:
 	ln -s $(tdir)/examples/lightclient/object_server.c $(sdir)/object_server.$(suffix)
 	ln -s $(tdir)/examples/lightclient/object_test.c $(sdir)/object_test.$(suffix)
 
-	ln -s $(tdir)/examples/shared/connection.c $(sdir)/connection.$(suffix)
+	#ln -s $(tdir)/examples/shared/connection.c $(sdir)/connection.$(suffix)
 	ln -s $(tdir)/examples/shared/platform.c $(sdir)/platform.$(suffix)
 
-	ln -s $(tdir)/examples/shared/connection.h $(sdir)/connection.h
+	#ln -s $(tdir)/examples/shared/connection.h $(sdir)/connection.h
 	ln -s $(tdir)/examples/shared/commandline.h $(sdir)/commandline.h
 
 	ln -s $(tdir)/core/block1.c $(sdir)/block1.$(suffix)

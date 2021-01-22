@@ -1,6 +1,9 @@
 #include "Arduino.h"
 #include "lwm2m_wakaama.h"
 
+#include <WiFiNINA.h>
+#include <WiFiUdp.h>
+
 #include "liblwm2m.h"
 
 extern lwm2m_object_t * get_object_device(void);
@@ -259,4 +262,53 @@ void WakaamaClient::run()
     }
 }
 
+uint8_t lwm2m_buffer_send(void * sessionH,
+                          uint8_t * buffer,
+                          size_t length,
+                          void * userdata)
+{
+    Serial.println("lwm2m_buffer_send()");
+    //Serial.println("No packet sent since code is commented out!");
 
+    // fprintf(stdout, "QLEISAN: lwm2m_buffer_send\r\n");
+    // connection_t * connP = (connection_t*) sessionH;
+
+    // (void)userdata; /* unused */
+
+    // if (connP == NULL)
+    // {
+    //     fprintf(stderr, "#> failed sending %lu bytes, missing connection\r\n", length);
+    //     return COAP_500_INTERNAL_SERVER_ERROR ;
+    // }
+
+    // if (-1 == connection_send(connP, buffer, length))
+    // {
+    //     fprintf(stderr, "#> failed sending %lu bytes\r\n", length);
+    //     return COAP_500_INTERNAL_SERVER_ERROR ;
+    // }
+
+    Serial.println("SUCCESS!! INSIDE connection_send()");
+    Serial.println(length);
+    for(int i=0;i<length;i++)
+    {
+        Serial.print(i);
+        Serial.print(":");
+        Serial.print(buffer[i],HEX);
+        Serial.print(":");
+        Serial.write(buffer[i]);
+        Serial.println("");
+    }
+    Serial.println("Send packet using WiFiNINA");
+
+    extern WiFiUDP Udp;
+
+    //qleisan - remove hardcoding, IP should be read from data structure
+    IPAddress address(192, 168, 0, 23);
+    Udp.beginPacket(address, 5683);
+    Udp.write(buffer, length);
+    Udp.endPacket();
+    Serial.println("Packet Sent!");
+
+
+    return COAP_NO_ERROR;
+}
