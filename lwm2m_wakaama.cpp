@@ -6,6 +6,8 @@
 
 #include "liblwm2m.h"
 
+extern WiFiUDP Udp;
+
 extern lwm2m_object_t * get_object_device(void);
 // extern void free_object_device(lwm2m_object_t * objectP);
 extern lwm2m_object_t * get_server_object(void);
@@ -137,6 +139,125 @@ void lwm2m_close_connection(void * sessionH,
 }
 
 
+void print_state(lwm2m_context_t * lwm2mH)
+{
+    lwm2m_server_t * targetP;
+
+    Serial.println("State: ");
+    switch(lwm2mH->state)
+    {
+    case STATE_INITIAL:
+        Serial.println("STATE_INITIAL");
+        break;
+    case STATE_BOOTSTRAP_REQUIRED:
+        Serial.println("STATE_BOOTSTRAP_REQUIRED");
+        break;
+    case STATE_BOOTSTRAPPING:
+        Serial.println("STATE_BOOTSTRAPPING");
+        break;
+    case STATE_REGISTER_REQUIRED:
+        Serial.println("STATE_REGISTER_REQUIRED");
+        break;
+    case STATE_REGISTERING:
+        Serial.println("STATE_REGISTERING");
+        break;
+    case STATE_READY:
+        Serial.println("STATE_READY");
+        break;
+    default:
+        Serial.println("Unknown !");
+        break;
+    }
+    Serial.println("\r\n");
+
+    targetP = lwm2mH->bootstrapServerList;
+
+    if (lwm2mH->bootstrapServerList == NULL)
+    {
+        Serial.println("No Bootstrap Server.\r\n");
+    }
+    else
+    {
+        Serial.println("Bootstrap Servers:\r\n");
+        for (targetP = lwm2mH->bootstrapServerList ; targetP != NULL ; targetP = targetP->next)
+        {
+            /*
+            fprintf(stderr, " - Security Object ID %d", targetP->secObjInstID);
+            fprintf(stderr, "\tHold Off Time: %lu s", (unsigned long)targetP->lifetime);
+            */
+            Serial.println("\tstatus: ");
+            switch(targetP->status)
+            {
+            case STATE_DEREGISTERED:
+                Serial.println("DEREGISTERED\r\n");
+                break;
+            case STATE_BS_HOLD_OFF:
+                Serial.println("CLIENT HOLD OFF\r\n");
+                break;
+            case STATE_BS_INITIATED:
+                Serial.println("BOOTSTRAP INITIATED\r\n");
+                break;
+            case STATE_BS_PENDING:
+                Serial.println("BOOTSTRAP PENDING\r\n");
+                break;
+            case STATE_BS_FINISHED:
+                Serial.println("BOOTSTRAP FINISHED\r\n");
+                break;
+            case STATE_BS_FAILED:
+                Serial.println("BOOTSTRAP FAILED\r\n");
+                break;
+            default:
+                //fprintf(stderr, "INVALID (%d)\r\n", (int)targetP->status);
+                Serial.println("INVALID XXX\r\n");
+            }
+            Serial.println("\r\n");
+        }
+    }
+
+    if (lwm2mH->serverList == NULL)
+    {
+        Serial.println("No LWM2M Server.\r\n");
+    }
+    else
+    {
+        Serial.println("LWM2M Servers:\r\n");
+        for (targetP = lwm2mH->serverList ; targetP != NULL ; targetP = targetP->next)
+        {
+            // fprintf(stderr, " - Server ID %d", targetP->shortID);
+            Serial.println("\tstatus: ");
+            switch(targetP->status)
+            {
+            case STATE_DEREGISTERED:
+                Serial.println("DEREGISTERED\r\n");
+                break;
+            case STATE_REG_PENDING:
+                Serial.println("REGISTRATION PENDING\r\n");
+                break;
+            case STATE_REGISTERED:
+                //fprintf(stderr, "REGISTERED\tlocation: \"%s\"\tLifetime: %lus\r\n", targetP->location, (unsigned long)targetP->lifetime);
+                Serial.println("REGISTERED .... \r\n");
+                break;
+            case STATE_REG_UPDATE_PENDING:
+                Serial.println("REGISTRATION UPDATE PENDING\r\n");
+                break;
+            case STATE_REG_UPDATE_NEEDED:
+                Serial.println("REGISTRATION UPDATE REQUIRED\r\n");
+                break;
+            case STATE_DEREG_PENDING:
+                Serial.println("DEREGISTRATION PENDING\r\n");
+                break;
+            case STATE_REG_FAILED:
+                Serial.println("REGISTRATION FAILED\r\n");
+                break;
+            default:
+                //fprintf(stderr, "INVALID (%d)\r\n", (int)targetP->status);
+                Serial.println("INVALID .....\r\n");
+            }
+            Serial.println("\r\n");
+        }
+    }
+}
+
 #define OBJ_COUNT 4
 
 
@@ -219,9 +340,14 @@ void WakaamaClient::run()
     while(1) {
         // main loop       
 
+        uint8_t buffer[MAX_PACKET_SIZE];
+        int numBytes;
+
         struct timeval tv;
         tv.tv_sec = 60;
         tv.tv_usec = 0;
+
+        print_state(lwm2mH);
 
         /*
          * This function does two things:
@@ -238,15 +364,29 @@ void WakaamaClient::run()
         }
      
         //TODO: Not OK to block here, need to loop some time before packet is sent?
+        // no - it is sent right way...
 
-        Serial.println("LOOPING FOREVER");
-        // blink slow
-        for(;;) {
-            digitalWrite(LED_BUILTIN, HIGH);
-            delay(500);
-            digitalWrite(LED_BUILTIN, LOW);
-            delay(500);
+        delay(1000);
+        if (Udp.parsePacket()) {
+            Serial.println("packet received");
+            numBytes = Udp.read(buffer, MAX_PACKET_SIZE);
+            Serial.print("numbytes = ");
+            Serial.println(numBytes);
+            // UGLY HACK "data.connList" (point to first connection)
+            lwm2m_handle_packet(lwm2mH, buffer, numBytes, data.connList);
+        } else {
+            Serial.println("no packet...");
         }
+
+
+        // Serial.println("LOOPING FOREVER");
+        // // blink slow
+        // for(;;) {
+        //     digitalWrite(LED_BUILTIN, HIGH);
+        //     delay(500);
+        //     digitalWrite(LED_BUILTIN, LOW);
+        //     delay(500);
+        // }
     }
 
     // ------------------------------------------------------------------
@@ -300,8 +440,6 @@ uint8_t lwm2m_buffer_send(void * sessionH,
     }
     Serial.println("Send packet using WiFiNINA");
 
-    extern WiFiUDP Udp;
-
     //qleisan - remove hardcoding, IP should be read from data structure
     IPAddress address(192, 168, 0, 23);
     Udp.beginPacket(address, 5683);
@@ -311,4 +449,18 @@ uint8_t lwm2m_buffer_send(void * sessionH,
 
 
     return COAP_NO_ERROR;
+}
+
+// ---------------------------------------
+
+bool lwm2m_session_is_equal(void * session1,
+                            void * session2,
+                            void * userData)
+{
+    fprintf(stdout, "QLEISAN: lwm2m_session_is_equal\r\n");
+
+    (void)userData; /* unused */
+
+    //return (session1 == session2);
+    return true; // TODO - FIXME!!!
 }

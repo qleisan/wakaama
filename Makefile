@@ -160,6 +160,7 @@ createlib:
 	ln -s $(tdir)/core/transaction.c $(sdir)/transaction.$(suffix)
 	ln -s $(tdir)/core/uri.c $(sdir)/uri.$(suffix)
 	ln -s $(tdir)/core/utils.c $(sdir)/utils.$(suffix)
+	ln -s $(tdir)/core/management.c $(sdir)/management.$(suffix)
 
 	ln -s $(tdir)/core/internals.h $(sdir)/internals.h
 	ln -s $(tdir)/core/liblwm2m.h $(sdir)/liblwm2m.h
