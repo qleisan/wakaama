@@ -6,8 +6,6 @@
 // A UDP instance to let us send and receive packets over UDP
 WiFiUDP Udp;
 
-WakaamaClient myclient(5);
-
 int status = WL_IDLE_STATUS;
 //should be included in "arduino_secrets.h"
 //char ssid[] = "";   // your network SSID (name)
@@ -22,11 +20,9 @@ void setup() {
 void loop() {
     Serial.print("Boot delay...");
     delay(3000);
-    Serial.print("continue\r\n");
+    Serial.print("Arduino lwm2m wakaama client initializing\r\n");
 
-    Serial.println(myclient.apa);
-
-    Serial.println("arduinoclient is alive!");
+    WakaamaClient myclient; //problem if outside loop()
 
     // check for the WiFi module:
     if (WiFi.status() == WL_NO_MODULE) {
@@ -50,15 +46,25 @@ void loop() {
     // connecting to socket should be done connection.c ?
     Udp.begin(56830); 
 
-    myclient.run();
+    //myclient.run();
+    /*
+        initialize myclient ()  // later with function pointer to a send_packet function
+        loop:
+            myclient.lwm2m_step()
+            wait for packet until "some time"
+            lwm2m_handle_packet()
 
-    Serial.println("loop forever\r\n");
+    */
+
+    //Serial.println("loop forever\r\n");
 
     for(;;) {
+        myclient.step();
         digitalWrite(LED_BUILTIN, HIGH);
-        delay(100);
+        delay(500);
+        myclient.handle_packet();
         digitalWrite(LED_BUILTIN, LOW);
-        delay(100);
+        delay(500);
     }
 }
 

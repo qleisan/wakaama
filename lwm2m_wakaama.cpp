@@ -22,26 +22,8 @@ extern lwm2m_object_t * get_test_object(void);
 
 #define MAX_PACKET_SIZE 1024
 
-typedef struct _connection_t
-{
-    struct _connection_t *  next;
-    int                     sock;
-#ifndef ARDUINO
-    struct sockaddr_in6     addr;
-#else
-    int                     addr;
-#endif
-    size_t                  addrLen;
-} connection_t;
 
 
-typedef struct
-{
-    lwm2m_object_t * securityObjP;
-    int sock;
-    connection_t * connList;
-    int addressFamily;
-} client_data_t;
 
 void * lwm2m_connect_server(uint16_t secObjInstID,
                             void * userData)
@@ -266,24 +248,14 @@ void print_state(lwm2m_context_t * lwm2mH)
 
 char * args[] = {"", "-4","-n","ArduinoLightClient"};
 
-WakaamaClient::WakaamaClient(int x)
+WakaamaClient::WakaamaClient()
 {
-    apa = x;
-}
-
-// for now this never returns...
-void WakaamaClient::run()
-{
-    client_data_t data;
-    lwm2m_context_t * lwm2mH = NULL;
+    lwm2mH = NULL;
     lwm2m_object_t * objArray[OBJ_COUNT];
-
     char * name = "testlwm2mclient";
     int result;
 
     memset(&data, 0, sizeof(client_data_t));
-
-    // socket is should be created in the "sketch"
 
     objArray[0] = get_security_object();
     if (NULL == objArray[0])
@@ -336,16 +308,20 @@ void WakaamaClient::run()
         Serial.println("lwm2m_configure() failed");
         goto error;
     }
+    return;
 
-    while(1) {
-        // main loop       
+    error:
+        Serial.println("reached Error label");
 
-        uint8_t buffer[MAX_PACKET_SIZE];
-        int numBytes;
+}
 
+void WakaamaClient::step()
+{
         struct timeval tv;
         tv.tv_sec = 60;
         tv.tv_usec = 0;
+
+        int result; // need this here too
 
         print_state(lwm2mH);
 
@@ -360,45 +336,24 @@ void WakaamaClient::run()
         {
             //fprintf(stderr, "lwm2m_step() failed: 0x%X\r\n", result);
             Serial.println("lwm2m_step() failed");
-            goto error;
+            //goto error;
         }
-     
-        //TODO: Not OK to block here, need to loop some time before packet is sent?
-        // no - it is sent right way...
+}
 
-        delay(1000);
-        if (Udp.parsePacket()) {
-            Serial.println("packet received");
-            numBytes = Udp.read(buffer, MAX_PACKET_SIZE);
-            Serial.print("numbytes = ");
-            Serial.println(numBytes);
-            // UGLY HACK "data.connList" (point to first connection)
-            lwm2m_handle_packet(lwm2mH, buffer, numBytes, data.connList);
-        } else {
-            Serial.println("no packet...");
-        }
+void WakaamaClient::handle_packet()
+{
+    uint8_t buffer[MAX_PACKET_SIZE];
+    int numBytes;
 
-
-        // Serial.println("LOOPING FOREVER");
-        // // blink slow
-        // for(;;) {
-        //     digitalWrite(LED_BUILTIN, HIGH);
-        //     delay(500);
-        //     digitalWrite(LED_BUILTIN, LOW);
-        //     delay(500);
-        // }
-    }
-
-    // ------------------------------------------------------------------
-
-    error:
-      Serial.println("ERROR LOOP");
-      // blink fast
-      for(;;) {
-          digitalWrite(LED_BUILTIN, HIGH);
-          delay(50);
-          digitalWrite(LED_BUILTIN, LOW);
-          delay(50);
+    if (Udp.parsePacket()) {
+        Serial.println("packet received");
+        numBytes = Udp.read(buffer, MAX_PACKET_SIZE);
+        Serial.print("numbytes = ");
+        Serial.println(numBytes);
+        // UGLY HACK "data.connList" (point to first connection)
+        lwm2m_handle_packet(lwm2mH, buffer, numBytes, data.connList);
+    } else {
+        Serial.println("no packet...");
     }
 }
 
