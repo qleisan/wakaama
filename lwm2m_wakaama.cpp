@@ -1,12 +1,12 @@
 #include "Arduino.h"
 #include "lwm2m_wakaama.h"
 
-#include <WiFiNINA.h>
-#include <WiFiUdp.h>
+//#include <WiFiNINA.h>
+//#include <WiFiUdp.h>
 
 #include "liblwm2m.h"
 
-extern WiFiUDP Udp;
+//extern WiFiUDP Udp;
 
 extern lwm2m_object_t * get_object_device(void);
 // extern void free_object_device(lwm2m_object_t * objectP);
@@ -20,7 +20,7 @@ extern char * get_server_uri(lwm2m_object_t * objectP, uint16_t secObjInstID);
 extern lwm2m_object_t * get_test_object(void);
 // extern void free_test_object(lwm2m_object_t * object);
 
-#define MAX_PACKET_SIZE 1024
+//#define MAX_PACKET_SIZE 1024
 
 
 
@@ -240,13 +240,13 @@ void print_state(lwm2m_context_t * lwm2mH)
     }
 }
 
+//TODO: this should not be extern - passed as function poiner
+extern void A(uint8_t * buffer, size_t length);
+
 #define OBJ_COUNT 4
 
-
-//extern "C" int myfun(int);
-//extern int main2(int argc, char *argv[]);
-
-char * args[] = {"", "-4","-n","ArduinoLightClient"};
+// outside class...
+void (*fun_p)(uint8_t * buffer, size_t length);
 
 WakaamaClient::WakaamaClient()
 {
@@ -254,6 +254,9 @@ WakaamaClient::WakaamaClient()
     lwm2m_object_t * objArray[OBJ_COUNT];
     char * name = "testlwm2mclient";
     int result;
+
+    // TODO: function pointer shall be set using parameter to constructor
+    fun_p = &A;
 
     memset(&data, 0, sizeof(client_data_t));
 
@@ -340,21 +343,10 @@ void WakaamaClient::step()
         }
 }
 
-void WakaamaClient::handle_packet()
+void WakaamaClient::handle_packet(int numBytes, uint8_t* buffer)
 {
-    uint8_t buffer[MAX_PACKET_SIZE];
-    int numBytes;
-
-    if (Udp.parsePacket()) {
-        Serial.println("packet received");
-        numBytes = Udp.read(buffer, MAX_PACKET_SIZE);
-        Serial.print("numbytes = ");
-        Serial.println(numBytes);
-        // UGLY HACK "data.connList" (point to first connection)
-        lwm2m_handle_packet(lwm2mH, buffer, numBytes, data.connList);
-    } else {
-        Serial.println("no packet...");
-    }
+    // UGLY HACK "data.connList" (point to first connection)
+    lwm2m_handle_packet(lwm2mH, buffer, numBytes, data.connList);
 }
 
 uint8_t lwm2m_buffer_send(void * sessionH,
@@ -382,26 +374,10 @@ uint8_t lwm2m_buffer_send(void * sessionH,
     //     return COAP_500_INTERNAL_SERVER_ERROR ;
     // }
 
-    Serial.println("SUCCESS!! INSIDE connection_send()");
-    Serial.println(length);
-    for(int i=0;i<length;i++)
-    {
-        Serial.print(i);
-        Serial.print(":");
-        Serial.print(buffer[i],HEX);
-        Serial.print(":");
-        Serial.write(buffer[i]);
-        Serial.println("");
-    }
-    Serial.println("Send packet using WiFiNINA");
+    // TODO: this code should be replaced by call to callback function so that all UDP/Wifina code is separated out
 
-    //qleisan - remove hardcoding, IP should be read from data structure
-    IPAddress address(192, 168, 0, 23);
-    Udp.beginPacket(address, 5683);
-    Udp.write(buffer, length);
-    Udp.endPacket();
-    Serial.println("Packet Sent!");
-
+    Serial.println("using function poiner");
+    fun_p(buffer, length);
 
     return COAP_NO_ERROR;
 }

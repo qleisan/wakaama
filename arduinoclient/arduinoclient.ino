@@ -7,11 +7,10 @@
 WiFiUDP Udp;
 
 int status = WL_IDLE_STATUS;
+
 //should be included in "arduino_secrets.h"
 //char ssid[] = "";   // your network SSID (name)
 //char pass[] = "";   // your network password (use for WPA, or use as key for WEP)
-
-//char * args[] = {"", "-4","-n","ArduinoLightClient"};
 
 void setup() {
     pinMode(LED_BUILTIN, OUTPUT);
@@ -46,25 +45,50 @@ void loop() {
     // connecting to socket should be done connection.c ?
     Udp.begin(56830); 
 
-    //myclient.run();
-    /*
-        initialize myclient ()  // later with function pointer to a send_packet function
-        loop:
-            myclient.lwm2m_step()
-            wait for packet until "some time"
-            lwm2m_handle_packet()
-
-    */
-
-    //Serial.println("loop forever\r\n");
+    uint8_t buffer[MAX_PACKET_SIZE];
+    int numBytes;
 
     for(;;) {
         myclient.step();
         digitalWrite(LED_BUILTIN, HIGH);
         delay(500);
-        myclient.handle_packet();
+        if (Udp.parsePacket()) {
+            Serial.println("packet received");
+            numBytes = Udp.read(buffer, MAX_PACKET_SIZE);
+            Serial.print("numbytes = ");
+            Serial.println(numBytes);
+            myclient.handle_packet(numBytes, buffer);
+        } else {
+            Serial.println("no packet...");
+        }
         digitalWrite(LED_BUILTIN, LOW);
         delay(500);
     }
+}
+
+//TODO rename and send info about this function to constructor (for later callback)
+void A(uint8_t * buffer, size_t length) 
+{
+    Serial.println("Inside funcion A now in ino");
+    
+    Serial.println("SUCCESS!! INSIDE connection_send()");
+    Serial.println(length);
+    for(int i=0;i<length;i++)
+    {
+        Serial.print(i);
+        Serial.print(":");
+        Serial.print(buffer[i],HEX);
+        Serial.print(":");
+        Serial.write(buffer[i]);
+        Serial.println("");
+    }
+    Serial.println("Send packet using WiFiNINA");
+
+    //qleisan - remove hardcoding, IP should be read from data structure
+    IPAddress address(192, 168, 0, 23);
+    Udp.beginPacket(address, 5683);
+    Udp.write(buffer, length);
+    Udp.endPacket();
+    Serial.println("Packet Sent!");
 }
 
