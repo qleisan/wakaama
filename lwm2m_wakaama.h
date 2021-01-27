@@ -25,7 +25,7 @@ typedef struct
 class WakaamaClient
 {
   public:
-    WakaamaClient();
+    WakaamaClient(void (*f)(uint8_t * buffer, size_t length));
     void step();
     void handle_packet(int numBytes, uint8_t* buffer);
     lwm2m_context_t * lwm2mH;

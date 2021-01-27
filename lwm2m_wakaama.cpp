@@ -248,7 +248,7 @@ extern void A(uint8_t * buffer, size_t length);
 // outside class...
 void (*fun_p)(uint8_t * buffer, size_t length);
 
-WakaamaClient::WakaamaClient()
+WakaamaClient::WakaamaClient(void (*f)(uint8_t * buffer, size_t length))
 {
     lwm2mH = NULL;
     lwm2m_object_t * objArray[OBJ_COUNT];
@@ -256,7 +256,7 @@ WakaamaClient::WakaamaClient()
     int result;
 
     // TODO: function pointer shall be set using parameter to constructor
-    fun_p = &A;
+    fun_p = f;
 
     memset(&data, 0, sizeof(client_data_t));
 
