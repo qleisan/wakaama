@@ -3,53 +3,45 @@
 #include <WiFiNINA.h>
 #include <WiFiUdp.h>
 
-// A UDP instance to let us send and receive packets over UDP
-WiFiUDP Udp;
 
-int status = WL_IDLE_STATUS;
+// Settings. ---------------------------------------------------------------------
+
+IPAddress address(192, 168, 0, 23);     // !!! Must be updated to server IP !!!
+const unsigned int remote_port = 5683;
+const unsigned int local_port = 56830;
+const unsigned int timeout_ms = 10000;
 
 //should be included in "arduino_secrets.h"
 //char ssid[] = "";   // your network SSID (name)
 //char pass[] = "";   // your network password (use for WPA, or use as key for WEP)
 
+// -------------------------------------------------------------------------------
 
-//TODO rename
-void A(uint8_t * buffer, size_t length) 
+WiFiUDP Udp;
+int status = WL_IDLE_STATUS;
+
+
+void send_packet_callback(uint8_t * buffer, size_t length) 
 {
-    Serial.println("Inside funcion A now in ino");
-    
-    Serial.println("SUCCESS!! INSIDE connection_send()");
+    Serial.print("Send packet using WiFiNINA, length = ");
     Serial.println(length);
-    for(int i=0;i<length;i++)
-    {
-        Serial.print(i);
-        Serial.print(":");
-        Serial.print(buffer[i],HEX);
-        Serial.print(":");
-        Serial.write(buffer[i]);
-        Serial.println("");
-    }
-    Serial.println("Send packet using WiFiNINA");
-
-    //qleisan - remove hardcoding, IP should be read from data structure
-    IPAddress address(192, 168, 0, 23);
-    Udp.beginPacket(address, 5683);
+    Udp.beginPacket(address, remote_port);
     Udp.write(buffer, length);
     Udp.endPacket();
-    Serial.println("Packet Sent!");
 }
 
 
 void setup() {
     pinMode(LED_BUILTIN, OUTPUT);
 }
- 
+
+
 void loop() {
     Serial.print("Boot delay...");
     delay(3000);
     Serial.print("Arduino lwm2m wakaama client initializing\r\n");
 
-    WakaamaClient myclient(&A); //problem if outside loop()
+    WakaamaClient client(&send_packet_callback); //problem if outside loop()
 
     // check for the WiFi module:
     if (WiFi.status() == WL_NO_MODULE) {
@@ -70,26 +62,31 @@ void loop() {
     }
     Serial.println("Connected to wifi");
 
-    // connecting to socket should be done connection.c ?
-    Udp.begin(56830); 
-
-    uint8_t buffer[MAX_PACKET_SIZE];
-    int numBytes;
-
+    Udp.begin(local_port);  
     for(;;) {
-        myclient.step();
-        digitalWrite(LED_BUILTIN, HIGH);
-        delay(500);
-        if (Udp.parsePacket()) {
-            Serial.println("packet received");
-            numBytes = Udp.read(buffer, MAX_PACKET_SIZE);
-            Serial.print("numbytes = ");
-            Serial.println(numBytes);
-            myclient.handle_packet(numBytes, buffer);
-        } else {
-            Serial.println("no packet...");
+        unsigned long starttime;
+        int size = 0;
+        uint8_t buffer[MAX_PACKET_SIZE];
+        int numBytes;    
+
+        client.step();
+        
+        // simulate a blocking wait for packet with timeout
+        starttime = millis();
+        while ((millis() - starttime) < timeout_ms && size == 0)
+        {
+            size = Udp.parsePacket();
+            // blink LED, introduces processing latency (improve this)
+            digitalWrite(LED_BUILTIN, HIGH); delay(500);
+            digitalWrite(LED_BUILTIN, LOW);  delay(500);
         }
-        digitalWrite(LED_BUILTIN, LOW);
-        delay(500);
+
+        if (size > 0) {
+            size = 0;
+            numBytes = Udp.read(buffer, MAX_PACKET_SIZE);
+            Serial.print("packet received, numbytes = ");
+            Serial.println(numBytes);
+            client.handle_packet(numBytes, buffer);
+        }
     }
 }
