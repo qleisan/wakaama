@@ -87,6 +87,9 @@
 int g_reboot = 0;
 static int g_quit = 0;
 
+lwm2m_context_t * lwm2mH = NULL;
+
+
 #define OBJ_COUNT 9
 lwm2m_object_t * objArray[OBJ_COUNT];
 
@@ -108,10 +111,16 @@ typedef struct
     int addressFamily;
 } client_data_t;
 
+extern void lwm2m_deregister(lwm2m_context_t * context);
+
 static void prv_quit(char * buffer,
                      void * user_data)
 {
-    g_quit = 1;
+    //g_quit = 1;
+    fprintf(stderr,"qleisan_call to deregister()\r\n");
+    lwm2m_deregister(lwm2mH);
+
+
 }
 
 void handle_sigint(int signum)
@@ -819,11 +828,12 @@ void print_usage(void)
     fprintf(stdout, "\r\n");
 }
 
+
 int main(int argc, char *argv[])
 {
     client_data_t data;
     int result;
-    lwm2m_context_t * lwm2mH = NULL;
+    
     int i;
     const char * localPort = "56830";
     const char * server = NULL;
