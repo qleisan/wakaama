@@ -1111,6 +1111,7 @@ static void prv_handleDeregistrationReply(lwm2m_context_t * contextP,
     (void)contextP; /* unused */
     (void)message; /* unused */
 
+    LOG("QLEISAN - inside prv_handleDeregistrationReply()\r\n");
     targetP = (lwm2m_server_t *)(transacP->userData);
     if (NULL != targetP)
     {

@@ -80,6 +80,8 @@
 #include <errno.h>
 #include <signal.h>
 
+#include "internals.h"
+
 #define MAX_PACKET_SIZE 2048
 #define DEFAULT_SERVER_IPV6 "[::1]"
 #define DEFAULT_SERVER_IPV4 "127.0.0.1"
@@ -117,8 +119,23 @@ static void prv_quit(char * buffer,
                      void * user_data)
 {
     //g_quit = 1;
-    fprintf(stderr,"qleisan_call to deregister()\r\n");
-    lwm2m_deregister(lwm2mH);
+    fprintf(stderr,"*** QLEISAN HACK ***\r\n");
+    //lwm2m_deregister(lwm2mH);
+
+    lwm2m_server_t * server = lwm2mH->serverList;
+
+    while (NULL != server)
+    {
+        //registration_deregister(context, server);
+        fprintf(stderr,">>%d\r\n", server->shortID);
+        if (server->shortID == 1 || server->shortID == 123) 
+        {
+            // this is the local wakaama server as specified by bootstrap_server.ini
+            fprintf(stderr,"qleisan - call registration_deregister() for this server\r\n");
+            registration_deregister(lwm2mH, server);
+        }
+        server = server->next;
+    }
 
 
 }
