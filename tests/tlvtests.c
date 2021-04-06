@@ -70,7 +70,7 @@ static void test_decodeTLV()
     result = lwm2m_decode_TLV(data2, sizeof(data2), &type, &id, &index, &length);
     CU_ASSERT_EQUAL(result, 13);
     CU_ASSERT_EQUAL(type, LWM2M_TYPE_OBJECT_INSTANCE);
-    CU_ASSERT_EQUAL(id, 0x0203);
+    CU_ASSERT_EQUAL(id, 0x0204);
     CU_ASSERT_EQUAL(index, 4);
     CU_ASSERT_EQUAL(length, 9);
 
