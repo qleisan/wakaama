@@ -41,3 +41,23 @@ def test_registration_interface(lwm2mserver, lwm2mclient):
     assert lifetime == 300
     assert "/1 (1.1)" in objects
     assert "/1/0" in objects
+
+
+def test_registration_update_trigger(lwm2mserver, lwm2mclient):
+    """LightweightM2M-1.1-int-104
+    Test that the Client updates its registration with the Server when triggered
+    with the Registration Update Trigger."""
+
+    assert lwm2mserver.commandresponse("exec 0 /1/0/8", "OK")
+    assert lwm2mserver.waitforpacket().find("COAP_204_CHANGED") > 0
+    text = lwm2mserver.waitforpacket()
+    client_id, event, endpoint, version, binding, lifetime, objects = \
+        parse_client_registration(text)
+    assert client_id == 0
+    assert event == "updated"
+    assert endpoint == "testlwm2mclient"
+    assert version == "1.1"
+    assert binding == "UDP"
+    assert lifetime == 300
+    assert "/1 (1.1)" in objects
+    assert "/1/0" in objects
