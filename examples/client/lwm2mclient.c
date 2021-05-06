@@ -868,6 +868,7 @@ void print_usage(void)
     fprintf(stdout, "  -c\t\tChange battery level over time.\r\n");
     fprintf(stdout, "  -S BYTES\tCoAP block size. Options: 16, 32, 64, 128, 256, 512, 1024. Default: %" PRIu16 "\r\n",
             LWM2M_COAP_DEFAULT_BLOCK_SIZE);
+    fprintf(stdout, "  -f FORMAT\tRegister client using ct=<FORMAT>.\r\n");
 #ifdef WITH_TINYDTLS
     fprintf(stdout, "  -i STRING\tSet the device management or bootstrap server PSK identity. If not set use none secure mode\r\n");
     fprintf(stdout, "  -s HEXSTRING\tSet the device management or bootstrap server Pre-Shared-Key. If not set use none secure mode\r\n");
@@ -885,6 +886,8 @@ int main(int argc, char *argv[])
     const char * serverPort = LWM2M_STANDARD_PORT_STR;
     char * name = "testlwm2mclient";
     int lifetime = 300;
+    int temp;
+    char *regformatstr = NULL;
     int batterylevelchanging = 0;
     time_t reboot_time = 0;
     int opt;
@@ -1043,6 +1046,19 @@ int main(int argc, char *argv[])
                 print_usage();
                 return 0;
             }
+        case 'f':
+            opt++;
+            if (opt >= argc) {
+                print_usage();
+                return 0;
+            }
+            if (1 != sscanf(argv[opt], "%d", &temp)) {
+                print_usage();
+                return 0;
+            }
+            fprintf(stdout, "\nregformat = %d", temp);
+            regformatstr = argv[opt];
+            break;
         default:
             print_usage();
             return 0;
@@ -1202,6 +1218,8 @@ int main(int argc, char *argv[])
         fprintf(stderr, "lwm2m_init() failed\r\n");
         return -1;
     }
+
+    lwm2mH->defaultregformat = regformatstr;
 
     /*
      * We configure the liblwm2m library with the name of the client - which shall be unique for each client -
