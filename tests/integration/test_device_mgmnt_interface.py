@@ -14,6 +14,45 @@ def get_senml_json_record(parsed, urn, label):
     return next(item for item in parsed if item["n"] == urn)[label]
 
 
+def test_querying_basic_information_in_plain_text_format(lwm2mserver, lwm2mclient_text):
+    """LightweightM2M-1.1-int-201
+    Querying the following data on the client (Device Object: ID 3) using Plain
+    Text data format
+    """
+
+    # Test Procedure 1
+    assert lwm2mserver.commandresponse("read 0 /3/0/0", "OK")
+    text = lwm2mserver.waitforpacket()
+    # Pass-Criteria A
+    assert text.find("COAP_205_CONTENT") > 0
+    assert text.find("text/plain") > 0
+    assert text.find("Open Mobile Alli") > 0
+    assert text.find("ance") > 0
+
+
+def test_querying_basic_information_in_JSON_format(lwm2mserver, lwm2mclient_json):
+    """LightweightM2M-1.1-int-204
+    Querying the Resources Values of Device Object ID:3 on the Client using
+    JSON data format"""
+
+    # Test Procedure 1
+    assert lwm2mserver.commandresponse("read 0 /3/0", "OK")
+    text = lwm2mserver.waitforpacket()
+    # Pass-Criteria A
+    assert text.find("COAP_205_CONTENT") > 0
+    assert text.find("lwm2m+json") > 0
+    packet = re.findall(r"({.*})", text)
+    parsed = json.loads("["+packet[0]+"]")[0]
+    assert parsed['bn'] == "/3/0/"
+    parsed = parsed['e']
+    assert next(item for item in parsed if item["n"] == "0")["sv"] == "Open Mobile Alliance"
+    assert next(item for item in parsed if item["n"] == "1")["sv"] == "Lightweight M2M Client"
+    assert next(item for item in parsed if item["n"] == "2")["sv"] == "345000123"
+    assert next(item for item in parsed if item["n"] == "3")["sv"] == "1.0"
+    assert next(item for item in parsed if item["n"] == "11/0")["v"] == 0
+    assert next(item for item in parsed if item["n"] == "16")["sv"] == "U"
+
+
 def test_read_on_object(lwm2mserver, lwm2mclient):
     """LightweightM2M-1.1-int-222
     Purpose of this test is to show conformance with the LwM2M Read
