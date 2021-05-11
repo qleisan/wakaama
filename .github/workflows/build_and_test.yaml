@@ -12,8 +12,7 @@ jobs:
 
     strategy:
       matrix:
-        sanitizer: ["address", "leak", "thread", "undefined"]
-        compiler: ["clang-10", "gcc-10"]
+        compiler: ["clang-10"]
 
     steps:
     - name: Checkout code including full history and submodules
@@ -41,6 +40,6 @@ jobs:
 
     - name: Build, execute sanititzed unit tests
       run: |
-        tools/ci/run_ci.sh --run-tests --sanitizer ${{ matrix.sanitizer }}
+        tools/ci/run_ci.sh --run-tests
       env:
         CC:  ${{ matrix.compiler }}
