@@ -61,4 +61,4 @@ jobs:
           
     - name: Execute pylint
       run: |
-          pylint tests/integration/*.py
+          pylint tests
