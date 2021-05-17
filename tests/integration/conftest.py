@@ -1,7 +1,9 @@
+'''Wakaama integration tests (pytest) fixtures'''
 import pytest
 import pexpect
 
 
+# pylint: disable=no-member
 class HelperBase:
     '''Provides helper methods for integration tests. Wraps "pexpect" API'''
 
@@ -57,6 +59,7 @@ class Lwm2mServer(HelperBase):
         self.pexpectobj = pexpect.spawn("build-wakaama/examples/server/lwm2mserver" + " " + arguments,
                                encoding=encoding,
                                timeout=timeout)
+        # pylint: disable=consider-using-with
         self.pexpectobj.logfile = open("lwm2mserver_log.txt", "w")
 
 class Lwm2mClient(HelperBase):
@@ -65,6 +68,7 @@ class Lwm2mClient(HelperBase):
         self.pexpectobj = pexpect.spawn("build-wakaama/examples/client/lwm2mclient" + " " + arguments,
                                encoding=encoding,
                                timeout=timeout)
+        # pylint: disable=consider-using-with
         self.pexpectobj.logfile = open("lwm2mclient_log.txt", "w")
 
 
@@ -74,6 +78,7 @@ class Lwm2mBootstrapServer(HelperBase):
         self.pexpectobj = pexpect.spawn("build-wakaama/examples/bootstrap_server/bootstrap_server" + " " + arguments,
                                encoding=encoding,
                                timeout=timeout)
+        # pylint: disable=consider-using-with
         self.pexpectobj.logfile = open("lwm2mbootstrapserver_log.txt", "w")
 
 

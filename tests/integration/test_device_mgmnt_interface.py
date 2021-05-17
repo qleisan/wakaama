@@ -1,3 +1,4 @@
+'''Wakaama integration tests (pytest)'''
 import re
 import json
 
