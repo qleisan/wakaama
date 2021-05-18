@@ -46,6 +46,13 @@ class HelperBase:
             return False
         return True
 
+    def waitfortime(self, timedelay):
+        '''Wait for time and return output since last command'''
+        sleep(timedelay)
+        # this is a "hack" to be able to return output between commands
+        self.commandresponse("help", "help")
+        return self.pexpectobj.before
+
     def quit(self):
         """Quit client or server"""
         self.pexpectobj.sendline("q")       # exit, if client
