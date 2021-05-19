@@ -61,11 +61,25 @@ def test_registration_information_update(lwm2mserver, lwm2mclient):
     assert 2 <= text.count("Client #0 updated.") <= 3
 
 
+def test_deregistration(lwm2mserver, lwm2mclient):
+    """LightweightM2M-1.1-int-103
+    Test that the client is able to deregister at the Server."""
+
+    lwm2mclient.waitfortext("STATE_READY")
+     # Test Procedure 1, 2
+    assert lwm2mserver.commandresponse("exec 0 /1/0/4", "OK")
+    # Pass-Criteria A
+    assert lwm2mserver.waitforpacket().find("COAP_204_CHANGED") > 0
+    # Pass-Criteria (B), C
+    lwm2mserver.waitfortext("Client #0 unregistered.")
+
+
 def test_registration_update_trigger(lwm2mserver, lwm2mclient):
     """LightweightM2M-1.1-int-104
     Test that the Client updates its registration with the Server when triggered
     with the Registration Update Trigger."""
 
+    lwm2mclient.waitfortext("STATE_READY")
     assert lwm2mserver.commandresponse("exec 0 /1/0/8", "OK")
     assert lwm2mserver.waitforpacket().find("COAP_204_CHANGED") > 0
     text = lwm2mserver.waitforpacket()
