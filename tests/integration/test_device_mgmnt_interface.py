@@ -1,6 +1,7 @@
 """Wakaama integration tests (pytest)"""
 import re
 import json
+import pytest
 
 def get_senml_json_record(parsed, urn, label):
     """helper function returning value of associated label
@@ -14,7 +15,8 @@ def get_senml_json_record(parsed, urn, label):
     return next(item for item in parsed if item["n"] == urn)[label]
 
 
-def test_querying_basic_information_in_plain_text_format(lwm2mserver, lwm2mclient_text):
+@pytest.mark.client_args("-f 0")
+def test_querying_basic_information_in_plain_text_format(lwm2mserver, lwm2mclient):
     """LightweightM2M-1.1-int-201
     Querying the following data on the client (Device Object: ID 3) using Plain
     Text data format
@@ -30,7 +32,8 @@ def test_querying_basic_information_in_plain_text_format(lwm2mserver, lwm2mclien
     assert text.find("ance") > 0
 
 
-def test_querying_basic_information_in_JSON_format(lwm2mserver, lwm2mclient_json):
+@pytest.mark.client_args("-f 11543")
+def test_querying_basic_information_in_JSON_format(lwm2mserver, lwm2mclient):
     """LightweightM2M-1.1-int-204
     Querying the Resources Values of Device Object ID:3 on the Client using
     JSON data format"""
@@ -71,7 +74,7 @@ def test_read_on_object(lwm2mserver, lwm2mclient):
     assert get_senml_json_record(parsed, "0/1", "v") == 300
     assert get_senml_json_record(parsed, "0/2", "v") == 0
     assert get_senml_json_record(parsed, "0/3", "v") == 0
-    assert get_senml_json_record(parsed, "0/5", "v") == 0
+    assert get_senml_json_record(parsed, "0/5", "v") == 86400
     assert get_senml_json_record(parsed, "0/6", "vb") is False
     assert get_senml_json_record(parsed, "0/7", "vs") == 'U'
     # Test Procedure 2
