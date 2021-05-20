@@ -131,3 +131,31 @@ def test_discarded_register_update(lwm2mserver, lwm2mclient):
     # Pass-Criteria D
     # Client should perform full registration according as in int-101
     # this is not implemented, client exits with "STATE_BOOTSTRAP_REQUIRED"
+
+
+@pytest.mark.slow
+#@pytest.mark.client_args("-t 60")
+def test_extending_lifetime_registration(lwm2mserver, lwm2mclient):
+    """LightweightM2M-1.1-int-107
+    Test that Server can extend the LwM2M lifetime of Client
+
+    Test only partially implemented due to limitations (see comments)"""
+
+    # Test Procedure 1
+    # Pass-Criteria A
+    lwm2mclient.waitfortext("STATE_READY")
+    # Test Procedure 2
+    assert lwm2mserver.commandresponse("write 0 /1/0/1 120", "OK")
+    text = lwm2mserver.waitforpacket()
+    # Pass-Criteria B
+    # a)
+    assert text.find("COAP_204_CHANGED") > 0
+    # b) NOT IMPLEMENTED
+    # c) not observable
+    # Test Procedure 3
+    text = lwm2mserver.waitfortime(120)
+    # Pass-Criteria C
+    # one update is sent immediately, expect implementation
+    # to send update at lifetime/2 intervals
+    # this does not seem to be the case for 120s (more frequent)
+    assert text.count("Client #0 updated.") >= 2
