@@ -35,7 +35,6 @@ def test_querying_basic_information_in_plain_text_format(lwm2mserver, lwm2mclien
     assert text.find("ance") > 0
 
 
-@pytest.mark.client_args("-f 11543")
 def test_querying_basic_information_in_json_format(lwm2mserver, lwm2mclient):
     """LightweightM2M-1.1-int-204
     Querying the Resources Values of Device Object ID:3 on the Client using

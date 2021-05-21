@@ -19,7 +19,8 @@ set -eu -o pipefail
 readonly REPO_ROOT_DIR="${PWD}"
 readonly SCRIPT_NAME="$(basename "$0")"
 
-CMAKE_ARGS="-DCMAKE_BUILD_TYPE=RelWithDebInfo"
+#TODO: FIXME!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+CMAKE_ARGS="-DCMAKE_BUILD_TYPE=RelWithDebInfo -DLWM2M_VERSION=1.0"
 OPT_BRANCH_SOURCE=
 OPT_BRANCH_TARGET=master
 OPT_C_EXTENSIONS=""

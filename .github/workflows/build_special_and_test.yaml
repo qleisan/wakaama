@@ -1,4 +1,4 @@
-name: Build and Test
+name: Build and Test SPECIAL
 
 on:
   push:
@@ -7,7 +7,7 @@ on:
     branches: '**'
 
 jobs:
-  build_and_test:
+  build_and_test_special:
     runs-on: ubuntu-20.04
 
     strategy:
