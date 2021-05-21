@@ -12,11 +12,11 @@ include(${CMAKE_CURRENT_LIST_DIR}/../shared/shared.cmake)
 add_compile_definitions(LWM2M_CLIENT_MODE)
 add_compile_definitions(LWM2M_BOOTSTRAP)
 
-#if(LWM2M_VERSION VERSION_GREATER "1.0")        # TO BE REMOVED BEFORE MERGE
+if(LWM2M_VERSION VERSION_GREATER "1.0")
     add_compile_definitions(LWM2M_SUPPORT_SENML_JSON)
-#else()
+else()
     add_compile_definitions(LWM2M_SUPPORT_JSON)
-#endif()
+endif()
 
 if(LWM2M_RAW_BLOCK1_REQUESTS)
     add_compile_definitions(LWM2M_RAW_BLOCK1_REQUESTS)
