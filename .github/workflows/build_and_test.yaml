@@ -12,8 +12,8 @@ jobs:
 
     strategy:
       matrix:
-        sanitizer: ["address", "leak", "thread", "undefined"]
-        compiler: ["clang-10", "gcc-10"]
+        sanitizer: ["address"]
+        compiler: ["clang-10"]
 
     steps:
     - name: Checkout code including full history and submodules
