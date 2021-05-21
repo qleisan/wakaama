@@ -2,6 +2,8 @@
 from pathlib import Path
 import pytest
 import pexpect
+from time import sleep
+
 
 # pylint: disable=no-member
 class HelperBase:
