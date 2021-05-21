@@ -1,8 +1,8 @@
 """Wakaama integration tests (pytest) fixtures"""
 from pathlib import Path
+from time import sleep
 import pytest
 import pexpect
-from time import sleep
 
 
 # pylint: disable=no-member

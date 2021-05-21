@@ -3,6 +3,9 @@ import re
 import json
 import pytest
 
+# lwmclient appears to be unused
+# pylint: disable=unused-argument
+
 def get_senml_json_record(parsed, urn, label):
     """helper function returning value of associated label
 
@@ -33,7 +36,7 @@ def test_querying_basic_information_in_plain_text_format(lwm2mserver, lwm2mclien
 
 
 @pytest.mark.client_args("-f 11543")
-def test_querying_basic_information_in_JSON_format(lwm2mserver, lwm2mclient):
+def test_querying_basic_information_in_json_format(lwm2mserver, lwm2mclient):
     """LightweightM2M-1.1-int-204
     Querying the Resources Values of Device Object ID:3 on the Client using
     JSON data format"""
