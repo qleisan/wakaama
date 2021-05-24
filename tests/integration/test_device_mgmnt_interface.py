@@ -31,12 +31,17 @@ def parse_tlv(text, id):
                 depth+=1
             else:
                 depth-=1
-        res = re.findall(r"ID: ([0-9]+) type: Resource Value", l[c])
+        res = re.findall(r"ID: ([0-9]+) type:", l[c])
         if depth == 1 and res and res[0] == str(id):
             #print(depth, res, l[c])
             # found the id, parse and return data
-            res = re.findall(r"data \(([0-9]+) bytes\):", l[c+2])
+            res = []
+            offset = 0
+            while not res:
+                res = re.findall(r"data \(([0-9]+) bytes\):", l[c+offset])
+                offset += 1
             #print("num bytes = ", res[0])
+            #print(offset)
             #print(int(res[0])//16)
             output = ""
             for i in range (0, int(res[0])//16+1):
@@ -44,7 +49,7 @@ def parse_tlv(text, id):
                 chars = int(res[0])-i*16
                 if chars > 16:
                     chars = 16
-                output += l[c+3+i].rstrip("\r")[-1*chars:]
+                output += l[c+offset+i].rstrip("\r")[-1*chars:]
                 #print(output)
             return output
         else:
@@ -80,13 +85,14 @@ def test_querying_basic_information_in_tlv_format(lwm2mserver, lwm2mclient):
     # Pass-Criteria A
     assert text.find("COAP_205_CONTENT") > 0
     assert text.find("lwm2m+tlv") > 0
+    #print("")
     #print(text)
-    print("")
+    # waitforpacket is not safe? need to make sure information after is in "text"
     assert parse_tlv(text, 0) == "Open Mobile Alliance"
     assert parse_tlv(text, 1) == "Lightweight M2M Client"
     assert parse_tlv(text, 2) == "345000123"
     assert parse_tlv(text, 3) == "1.0"
-    #assert parse_tlv(text, 11) == "???" --- Error code...
+    assert parse_tlv(text, 11) == "." # not printable char
     assert parse_tlv(text, 16) == "U"
 
 
