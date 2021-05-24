@@ -18,6 +18,40 @@ def get_senml_json_record(parsed, urn, label):
     return next(item for item in parsed if item["n"] == urn)[label]
 
 
+def parse_tlv(text, id):
+    #print("")
+    c = 0
+    depth=0
+    l=text.split("\n")
+    while l[c].find("bytes received of type application/vnd.oma.lwm2m+tlv") < 0:
+        c+=1
+    while c < len(l):
+        if not re.search(r"\w",l[c]) and re.search(r"[{}]",l[c]):
+            if l[c].find("{") > 0:
+                depth+=1
+            else:
+                depth-=1
+        res = re.findall(r"ID: ([0-9]+) type: Resource Value", l[c])
+        if depth == 1 and res and res[0] == str(id):
+            #print(depth, res, l[c])
+            # found the id, parse and return data
+            res = re.findall(r"data \(([0-9]+) bytes\):", l[c+2])
+            #print("num bytes = ", res[0])
+            #print(int(res[0])//16)
+            output = ""
+            for i in range (0, int(res[0])//16+1):
+                #print(l[c+3+i])
+                chars = int(res[0])-i*16
+                if chars > 16:
+                    chars = 16
+                output += l[c+3+i].rstrip("\r")[-1*chars:]
+                #print(output)
+            return output
+        else:
+            pass
+            #print(depth, l[c])
+        c+=1
+
 @pytest.mark.client_args("-f 0")
 def test_querying_basic_information_in_plain_text_format(lwm2mserver, lwm2mclient):
     """LightweightM2M-1.1-int-201
@@ -33,6 +67,27 @@ def test_querying_basic_information_in_plain_text_format(lwm2mserver, lwm2mclien
     assert text.find("text/plain") > 0
     assert text.find("Open Mobile Alli") > 0
     assert text.find("ance") > 0
+
+
+def test_querying_basic_information_in_tlv_format(lwm2mserver, lwm2mclient):
+    """LightweightM2M-1.1-int-203
+    Querying the Resources Values of Device Object ID:3 on the Client
+    Resources Values of Device Object ID:3"""
+
+    # Test Procedure 1
+    assert lwm2mserver.commandresponse("read 0 /3/0", "OK")
+    text = lwm2mserver.waitforpacket()
+    # Pass-Criteria A
+    assert text.find("COAP_205_CONTENT") > 0
+    assert text.find("lwm2m+tlv") > 0
+    #print(text)
+    print("")
+    assert parse_tlv(text, 0) == "Open Mobile Alliance"
+    assert parse_tlv(text, 1) == "Lightweight M2M Client"
+    assert parse_tlv(text, 2) == "345000123"
+    assert parse_tlv(text, 3) == "1.0"
+    #assert parse_tlv(text, 11) == "???" --- Error code...
+    assert parse_tlv(text, 16) == "U"
 
 
 def test_querying_basic_information_in_json_format(lwm2mserver, lwm2mclient):
