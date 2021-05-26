@@ -19,8 +19,7 @@ set -eu -o pipefail
 readonly REPO_ROOT_DIR="${PWD}"
 readonly SCRIPT_NAME="$(basename "$0")"
 
-#TODO: FIXME!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-CMAKE_ARGS="-DCMAKE_BUILD_TYPE=RelWithDebInfo -DLWM2M_VERSION=1.0"
+CMAKE_ARGS="-DCMAKE_BUILD_TYPE=RelWithDebInfo"
 OPT_BRANCH_SOURCE=
 OPT_BRANCH_TARGET=master
 OPT_C_EXTENSIONS=""
@@ -32,6 +31,7 @@ OPT_SONARQUBE=""
 OPT_TEST_COVERAGE_REPORT=""
 OPT_VERBOSE=0
 OPT_WRAPPER_CMD=""
+OPT_MAGIC=""
 RUN_BUILD=0
 RUN_CLANG_FORMAT=0
 RUN_CLEAN=0
@@ -190,6 +190,7 @@ if ! PARSED_OPTS=$(getopt -o vah \
                           -l branch-source: \
                           -l branch-target: \
                           -l c-extensions: \
+                          -l magic: \
                           -l c-standard: \
                           -l clang-format: \
                           -l help \
@@ -223,6 +224,10 @@ while true; do
       ;;
     --c-extensions)
       OPT_C_EXTENSIONS=$2
+      shift 2
+      ;;
+    --magic)
+      OPT_MAGIC=$2
       shift 2
       ;;
     --c-standard)
@@ -315,6 +320,10 @@ fi
 
 if [ -n "${OPT_C_EXTENSIONS}" ]; then
   CMAKE_ARGS="${CMAKE_ARGS} -DCMAKE_C_EXTENSIONS=${OPT_C_EXTENSIONS}"
+fi
+
+if [ -n "${OPT_MAGIC}" ]; then
+  CMAKE_ARGS="${CMAKE_ARGS} -D${OPT_MAGIC}"
 fi
 
 if [ -n "${OPT_C_STANDARD}" ]; then
