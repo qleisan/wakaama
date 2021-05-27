@@ -2,8 +2,7 @@
 import re
 import json
 import pytest
-# pylint: disable=import-error
-from conftest import get_senml_json_record
+from helpers.conftest import *
 
 
 # pylint: disable=unused-argument

@@ -1,8 +1,7 @@
 """Wakaama integration tests (pytest)"""
 import re
 import json
-# pylint: disable=import-error
-from conftest import get_senml_json_record
+from helpers.conftest import *
 
 
 def test_read_on_object(lwm2mserver, lwm2mclient):
