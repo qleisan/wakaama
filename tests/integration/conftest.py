@@ -4,6 +4,7 @@ from time import sleep
 import pytest
 import pexpect
 
+# this line has a too long comment salfkdjsldfjkalsdfkjlasdkjflaskjdflksdjflkjsdlfjkslakjflsdkjflskjdflskdlfjdsalkjasfdkjljasdjf
 
 # pylint: disable=no-member
 class HelperBase:
