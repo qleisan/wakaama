@@ -39,7 +39,7 @@ jobs:
 
     - name: Build all binaries JSON
       run: |
-        tools/ci/run_ci.sh --run-build --verbose --magic LWM2M_VERSION=1.0
+        tools/ci/run_ci.sh --run-build --verbose --add-cmake-arg LWM2M_VERSION=1.0
       env:
         CC:  ${{ matrix.compiler }}
 
@@ -50,7 +50,7 @@ jobs:
 
     - name: Build all binaries TLV
       run: |
-        tools/ci/run_ci.sh --run-build --verbose --magic TEST_TLV=ON
+        tools/ci/run_ci.sh --run-clean --run-build --verbose --add-cmake-arg TLV_ONLY=ON
       env:
         CC:  ${{ matrix.compiler }}
 

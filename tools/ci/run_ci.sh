@@ -20,6 +20,7 @@ readonly REPO_ROOT_DIR="${PWD}"
 readonly SCRIPT_NAME="$(basename "$0")"
 
 CMAKE_ARGS="-DCMAKE_BUILD_TYPE=RelWithDebInfo"
+OPT_ADD_CMAKE_ARG=""
 OPT_BRANCH_SOURCE=
 OPT_BRANCH_TARGET=master
 OPT_C_EXTENSIONS=""
@@ -31,7 +32,6 @@ OPT_SONARQUBE=""
 OPT_TEST_COVERAGE_REPORT=""
 OPT_VERBOSE=0
 OPT_WRAPPER_CMD=""
-OPT_MAGIC=""
 RUN_BUILD=0
 RUN_CLANG_FORMAT=0
 RUN_CLEAN=0
@@ -44,6 +44,8 @@ Runs build and test steps in CI.
 Select steps to execute with --run- options
 
 Options:
+  --add-cmake-arg ARG=VAL   Add cmake argument -DARG=VAL
+                            (e.g. add-cmake-arg LWM2M_VERSION=1.0)
   --branch-source BRANCH    Source branch for MRs
                             (default: current branch)
   --branch-target BRANCH    Target branch for MRs
@@ -186,11 +188,11 @@ if [ $ret -ne 4 ]; then
 fi
 
 if ! PARSED_OPTS=$(getopt -o vah \
+                          -l add-cmake-arg: \
                           -l all \
                           -l branch-source: \
                           -l branch-target: \
                           -l c-extensions: \
-                          -l magic: \
                           -l c-standard: \
                           -l clang-format: \
                           -l help \
@@ -214,6 +216,10 @@ eval set -- "${PARSED_OPTS}"
 
 while true; do
   case "$1" in
+    --add-cmake-arg)
+      OPT_ADD_CMAKE_ARG=$2
+      shift 2
+      ;;
     --branch-source)
       OPT_BRANCH_SOURCE=$2
       shift 2
@@ -224,10 +230,6 @@ while true; do
       ;;
     --c-extensions)
       OPT_C_EXTENSIONS=$2
-      shift 2
-      ;;
-    --magic)
-      OPT_MAGIC=$2
       shift 2
       ;;
     --c-standard)
@@ -322,8 +324,8 @@ if [ -n "${OPT_C_EXTENSIONS}" ]; then
   CMAKE_ARGS="${CMAKE_ARGS} -DCMAKE_C_EXTENSIONS=${OPT_C_EXTENSIONS}"
 fi
 
-if [ -n "${OPT_MAGIC}" ]; then
-  CMAKE_ARGS="${CMAKE_ARGS} -D${OPT_MAGIC}"
+if [ -n "${OPT_ADD_CMAKE_ARG}" ]; then
+  CMAKE_ARGS="${CMAKE_ARGS} -D${OPT_ADD_CMAKE_ARG}"
 fi
 
 if [ -n "${OPT_C_STANDARD}" ]; then
