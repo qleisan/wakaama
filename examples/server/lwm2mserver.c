@@ -306,6 +306,8 @@ static void prv_read_client(lwm2m_context_t * lwm2mH,
     uint16_t clientId;
     lwm2m_uri_t uri;
     char* end = NULL;
+    int nb;
+    int value = 99; //FIXME
     int result;
 
     /* unused parameters */
@@ -320,9 +322,21 @@ static void prv_read_client(lwm2m_context_t * lwm2mH,
     result = lwm2m_stringToUri(buffer, end - buffer, &uri);
     if (result == 0) goto syntax_error;
 
+    if (!check_end_of_args(end))
+    {
+        // check for optional <FORMAT> argument
+        buffer = get_next_arg(buffer, &end);
+        if (buffer[0] == 0) goto syntax_error;
+
+        nb = sscanf(buffer, "%d", &value);
+        if (nb != 1) goto syntax_error;
+        if (value < 0) goto syntax_error;
+        fprintf(stdout, "QLEISAN - youo wrote: %d\n", value);
+    }
+
     if (!check_end_of_args(end)) goto syntax_error;
 
-    result = lwm2m_dm_read(lwm2mH, clientId, &uri,  prv_result_callback, NULL);
+    result = lwm2m_dm_read(lwm2mH, clientId, &uri, value, prv_result_callback, NULL);
 
     if (result == 0)
     {
@@ -1054,9 +1068,10 @@ int main(int argc, char *argv[])
     command_desc_t commands[] =
     {
             {"list", "List registered clients.", NULL, prv_output_clients, NULL},
-            {"read", "Read from a client.", " read CLIENT# URI\r\n"
+            {"read", "Read from a client.", " read CLIENT# URI <FORMAT>\r\n"
                                             "   CLIENT#: client number as returned by command 'list'\r\n"
                                             "   URI: uri to read such as /3, /3/0/2, /1024/11, /1024/0/1\r\n"
+                                            "   FORMAT: (optional) specify format e.g. 11542 for TLV\r\n"
                                             "Result will be displayed asynchronously.", prv_read_client, NULL},
             {"disc", "Discover resources of a client.", " disc CLIENT# URI\r\n"
                                             "   CLIENT#: client number as returned by command 'list'\r\n"
